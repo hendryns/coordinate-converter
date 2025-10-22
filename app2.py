@@ -7,9 +7,9 @@ import io
 import zipfile
 import os
 import uuid
-import folium  # Untuk membuat peta
-import streamlit_folium as stf  # Untuk menampilkan peta Folium di Streamlit
-import utm  # Untuk konversi DD ke UTM otomatis
+import folium  # Baru: Untuk membuat peta
+import streamlit_folium as stf  # Baru: Untuk menampilkan peta Folium di Streamlit
+import utm  # Baru: Untuk konversi DD ke UTM otomatis
 # Pustaka 'openpyxl' juga diperlukan (diinstal via pip) agar Pandas bisa menulis .xlsx
 
 # --- Pengaturan Halaman Streamlit ---
@@ -213,7 +213,6 @@ def process_coordinates(df_input, input_crs_name, input_datum, input_zone_str):
         'lat_dms', 'lon_dms', 
         'easting_utm', 'northing_utm', 'zone_utm'
     ]
-    # Ambil kolom asli selain 'x' dan 'y' (misal 'nama_lokasi')
     original_cols = [col for col in df_input.columns if col not in ['x', 'y']]
     df_final = df[original_cols + output_columns]
     
@@ -276,63 +275,31 @@ with col_settings_2:
     else:
         st.info("Datum untuk input DD dan DMS diasumsikan WGS84.")
 
+# (Dihapus) Bagian "Zona UTM Output" tidak diperlukan lagi.
+
 # --- INPUT DATA ---
 st.divider()
 st.header("4. Masukkan Data Koordinat")
 
-# === BLOK MANUAL BARU (MENGGUNAKAN ST.DATA_EDITOR) ===
 if input_method == "Manual":
-    st.write("Gunakan tabel di bawah untuk memasukkan satu atau lebih koordinat. **Klik tombol `+` di bagian bawah tabel** untuk menambah baris baru.")
-
-    # Tentukan label kolom secara dinamis berdasarkan CRS yang dipilih
+    col_man_1, col_man_2 = st.columns(2)
+    
     if input_crs_name == "Decimal Degrees (DD)":
         x_label, y_label = "Longitude (X)", "Latitude (Y)"
-        x_contoh, y_contoh = "106.827", "-6.175"
+        x_placeholder, y_placeholder = "Contoh: 106.827", "Contoh: -6.175"
     elif input_crs_name == "UTM":
         x_label, y_label = f"Easting (X) - {input_datum}", f"Northing (Y) - {input_datum}"
-        x_contoh, y_contoh = "703000", "9317000"
+        x_placeholder, y_placeholder = "Contoh: 703000", "Contoh: 9317000"
     else: # Geografis (DMS)
         x_label, y_label = "Longitude (X)", "Latitude (Y)"
-        x_contoh, y_contoh = "106 49 37 BT", "6 10 30 LS"
+        x_placeholder, y_placeholder = "Contoh: 106 49 37 BT", "Contoh: 6 10 30 LS"
 
-    # Buat DataFrame template untuk editor
-    df_template = pd.DataFrame(
-        [
-            # Beri satu baris contoh
-            {x_label: x_contoh, y_label: y_contoh, "nama_lokasi (opsional)": "Contoh 1"},
-            # Sediakan baris kosong untuk diisi
-            {x_label: "", y_label: "", "nama_lokasi (opsional)": ""}, 
-        ]
-    )
+    x_input = col_man_1.text_input(x_label, placeholder=x_placeholder)
+    y_input = col_man_2.text_input(y_label, placeholder=y_placeholder)
+    
+    if x_input and y_input:
+        df_input = pd.DataFrame([{'x': x_input, 'y': y_input}])
 
-    # Gunakan st.data_editor
-    edited_df = st.data_editor(
-        df_template,
-        num_rows="dynamic",  # <-- Ini adalah fitur kuncinya!
-        use_container_width=True,
-        key="data_editor"
-    )
-
-    # Proses data dari editor
-    if not edited_df.empty:
-        # Ganti nama kolom kembali ke 'x' dan 'y' agar fungsi process_coordinates()
-        # bisa berfungsi tanpa perlu diubah
-        df_input = edited_df.rename(columns={
-            x_label: 'x',
-            y_label: 'y',
-            "nama_lokasi (opsional)": "nama_lokasi" # Ganti nama kolom opsional juga
-        })
-        
-        # Hapus baris di mana 'x' atau 'y' kosong (bisa string kosong atau None/NaN)
-        # Ini penting agar baris contoh atau baris kosong tidak ikut diproses
-        df_input = df_input.dropna(subset=['x', 'y'])
-        df_input = df_input[(df_input['x'].astype(str).str.strip() != "") & 
-                            (df_input['y'].astype(str).str.strip() != "")]
-        
-        if df_input.empty:
-            df_input = None # Set kembali ke None jika hanya ada baris kosong
-
-# === BLOK UNGGAH FILE (TIDAK BERUBAH) ===
 else: # Unggah File CSV
     uploaded_file = st.file_uploader(
         "Unggah file .csv", 
@@ -407,11 +374,12 @@ if st.button("🚀 Konversi Sekarang", type="primary", use_container_width=True)
                     st.success("Konversi Selesai!")
                     st.dataframe(df_result) # Tampilkan tabel hasil
                     
-                    # --- Opsi Download ---
+                    # --- (Baru) Opsi Download ---
+                    # Siapkan 4 kolom untuk tombol download
                     st.subheader("Unduh Hasil")
                     col_dl_1, col_dl_2, col_dl_3, col_dl_4 = st.columns(4)
 
-                    # Download CSV
+                    # (Baru) Download CSV
                     if "CSV" in output_formats:
                         csv_data = df_result.to_csv(index=False).encode('utf-8')
                         col_dl_1.download_button(
@@ -422,7 +390,7 @@ if st.button("🚀 Konversi Sekarang", type="primary", use_container_width=True)
                             use_container_width=True
                         )
 
-                    # Download Excel
+                    # (Baru) Download Excel
                     if "Excel (.xlsx)" in output_formats:
                         excel_buffer = io.BytesIO()
                         with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
@@ -493,7 +461,7 @@ if st.button("🚀 Konversi Sekarang", type="primary", use_container_width=True)
                                     os.remove(os.path.join(temp_dir, f))
                                 os.rmdir(temp_dir)
                     
-                    # --- Visualisasi Peta (SUDAH DIPERBAIKI) ---
+                    # --- (Baru) Visualisasi Peta ---
                     st.divider()
                     st.header("6. Visualisasi Peta")
                     
@@ -526,7 +494,7 @@ if st.button("🚀 Konversi Sekarang", type="primary", use_container_width=True)
                             # Sesuaikan batas peta agar mencakup semua titik
                             m.fit_bounds(m.get_bounds())
                             
-                            # Tampilkan peta di Streamlit (INI YANG DIPERBAIKI)
+                            # Tampilkan peta di Streamlit
                             stf.folium_static(m, width=None, height=500)
                             
                         except Exception as e:
