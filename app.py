@@ -306,6 +306,35 @@ else: # Unggah File CSV
         type=["csv"],
         help="Pastikan file CSV memiliki kolom 'x' dan 'y' (huruf besar/kecil tidak masalah)."
     )
+    with st.expander("ℹ️ Klik untuk melihat contoh struktur file .csv"):
+        st.write("""
+        File CSV Anda **harus** memiliki kolom bernama `x` dan `y`.
+        -   Kolom `x` harus berisi data Longitude / Easting.
+        -   Kolom `y` harus berisi data Latitude / Northing.
+        
+        Huruf besar/kecil pada nama kolom tidak masalah (`x`, `X`, `Y`, `y` semua diterima).
+        Kolom tambahan lain (seperti `id`, `nama_lokasi`, dll.) akan tetap dipertahankan dalam hasil konversi.
+        """)
+        
+        # Buat data contoh
+        contoh_data = {
+            'x': ['106.827153', '106.828111', '703000.12'],
+            'y': ['-6.175392', '-6.176333', '9317000.45'],
+            'nama_lokasi': ['Monas', 'Stasiun Gambir', 'Titik UTM']
+        }
+        df_contoh = pd.DataFrame(contoh_data)
+        
+        st.write("**Contoh tampilan di Excel/Spreadsheet:**")
+        st.dataframe(df_contoh, use_container_width=True)
+        
+        st.write("**Contoh tampilan di file .csv (teks mentah):**")
+        st.code(
+            "x,y,nama_lokasi\n"
+            "106.827153,-6.175392,Monas\n"
+            "106.828111,-6.176333,Stasiun Gambir\n"
+            "703000.12,9317000.45,Titik UTM",
+            language="csv"
+        )
     if uploaded_file:
         try:
             df_input = pd.read_csv(uploaded_file)
