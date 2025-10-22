@@ -495,7 +495,7 @@ if st.button("🚀 Konversi Sekarang", type="primary", use_container_width=True)
                             m.fit_bounds(m.get_bounds())
                             
                             # Tampilkan peta di Streamlit
-                            stf.folium_static(m, width=None, height=500, returned_objects=None)
+                            stf.folium_static(m, width=None, height=500)
                             
                         except Exception as e:
                             st.error(f"Gagal membuat peta visualisasi: {e}")
