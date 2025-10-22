@@ -1,0 +1,7 @@
+streamlit
+pandas
+geopandas
+pyproj
+streamlit-folium
+openpyxl
+utm

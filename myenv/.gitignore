@@ -1,0 +1,25 @@
+# Virtual Environments
+venv/
+*.env
+.venv
+env/
+ENV/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Streamlit
+.streamlit/
+secrets.toml
+
+# File sementara dari skrip kita
+temp_shapefiles*/
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+*.swp
